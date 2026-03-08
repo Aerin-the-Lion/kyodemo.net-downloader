@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         kyodemo.net-downloader
 // @namespace    http://tampermonkey.net/
-// @version      1.0.2.0
+// @version      1.0.3.0
 // @description  kyodemo.netからテキストを抽出し、元BBSのURLを復元して保存するスクリプト
 // @author       Aerin-the-Lion
 // @match        *://*.kyodemo.net/*/r/*
@@ -239,40 +239,11 @@
             const kyodemoUrl = window.location.href;
 
             // 元のBBSのURLを構築
-            let originalUrl = "";
-            const firstButton = document.querySelector('a.l-button');
-            if (firstButton) {
-                const href = firstButton.getAttribute('href') || '';
-                // URLから板名とスレッドキーを抽出（例: /sdemo/b/mnewsplus/?hi=...&key=1772973160）
-                const match = href.match(/\/sdemo\/b\/([^/]+)\/.*[?&]key=(\d+)/);
-                if (match) {
-                    let board = match[1];
-                    if (board.startsWith('e_e_')) {
-                        board = board.substring(4); // e_e_liveedge などの先頭識別子を削除
-                        originalUrl = `https://bbs.eddibb.cc/test/read.cgi/${board}/${match[2]}/`;
-                    } else {
-                        // e_e_ がついていない場合（5chなど）
-                        // ※厳密にはホスト名は板によるが、代表的なものとしてhayabusa9等のフォーマットに寄せるのは難しいため、
-                        // スレッド内に存在する本スレリンク（a[target="_blank"]）から推測する
-                        const sourceLink = document.querySelector('.post .clmess a[href*="test/read.cgi"]');
-                        if (sourceLink) {
-                            originalUrl = sourceLink.href;
-                        } else {
-                            // フォールバック（ホスト名は不確定だが、板とキーでそれっぽく）
-                            originalUrl = `https://itest.5ch.net/${board}/test/read.cgi/${match[2]}/`;
-                        }
-                    }
-                }
-            }
-
-            // それでもダメならDOM内の別要素から強引に取得を試みる
-            if (!originalUrl || originalUrl === "") {
-                const sourceAnchor = document.querySelector('a[href*="5ch.net/test/read.cgi"], a[href*=".5ch.io/test/read.cgi"]');
-                if (sourceAnchor) {
-                    originalUrl = sourceAnchor.href;
-                } else {
-                    originalUrl = "元スレッドURL不明";
-                }
+            let originalUrl = "元スレURL取得失敗";
+            // スレッド内に設置されている外部サイト（元スレ）への直リンクをそのまま取得する
+            const sourceAnchor = document.querySelector('a[href*="read.cgi"], a[href*="bbs.eddibb.cc"]');
+            if (sourceAnchor) {
+                originalUrl = sourceAnchor.href;
             }
 
             let resultText = `${title}\n元スレ: ${originalUrl}\nKyodemo: ${kyodemoUrl}\n\n`;
