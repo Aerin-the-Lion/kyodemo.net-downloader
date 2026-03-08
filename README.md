@@ -14,7 +14,8 @@ kyodemo.net のスレッドからテキストを抽出し、整形済みの `.tx
 
 ```
 回転寿司10皿、結構キツいwww
-https://bbs.eddibb.cc/test/read.cgi/liveedge/1772969200/
+元スレ: https://hayabusa9.5ch.io/test/read.cgi/mnewsplus/1772973160/
+Kyodemo: https://www.kyodemo.net/sdemo/r/mnewsplus/1772973160/1-
 
 1: エッヂの名無し  2026/03/08(日) 20:26:40.66 ID:220hR8ykI(1/8)
 最初に勢い余って頼みすぎちゃって後悔
