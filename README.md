@@ -1,1 +1,67 @@
 # kyodemo.net-downloader
+
+kyodemo.net のスレッドからテキストを抽出し、整形済みの `.txt` ファイルとして保存する Tampermonkey ユーザースクリプトです。
+
+## 機能
+
+- 📥 **全レス自動展開** — 「続き」ボタンを自動クリックして、ページ分割されたすべてのレスを展開します
+- 📖 **省略コンテンツの展開** — 「続きN行」で折りたたまれた長文レスも自動で展開します
+- 🔗 **元BBS URLの復元** — kyodemo のミラーURLから元の BBS（eddibb.cc）のスレッドURLを自動復元します
+- 🏷️ **投稿回数の表示** — 各レスに投稿者のスレッド内投稿回数 `(1/8)` を付与します
+- 💾 **ワンクリック保存** — 整形済みテキストを `.txt` ファイルとしてダウンロードします
+
+## 出力例
+
+```
+回転寿司10皿、結構キツいwww
+https://bbs.eddibb.cc/test/read.cgi/liveedge/1772969200/
+
+1: エッヂの名無し  2026/03/08(日) 20:26:40.66 ID:220hR8ykI(1/8)
+最初に勢い余って頼みすぎちゃって後悔
+2: エッヂの名無し  2026/03/08(日) 20:26:54.90 ID:ozZL8eq3V(1/3)
+余裕だ
+```
+
+## インストール
+
+### 前提条件
+
+- [Tampermonkey](https://www.tampermonkey.net/)（Chrome / Firefox / Edge 対応）
+
+### 手順
+
+1. ブラウザに Tampermonkey 拡張機能をインストール
+2. Tampermonkey ダッシュボードを開き「新規スクリプト」を作成
+3. [`kyodemo.net-downloader.js`](kyodemo.net-downloader.js) の内容をすべてコピー＆ペースト
+4. 保存（Ctrl+S）
+
+## 使い方
+
+1. `kyodemo.net` のスレッドページにアクセス
+2. 画面右下に表示される **「📥 Kyodemo Downloader」** パネルを確認
+3. **「全レス展開＆保存」** ボタンをクリック
+4. 自動で全レスが展開され、整形済みテキストが `.txt` ファイルとしてダウンロードされます
+
+## 対応URL
+
+```
+*://*.kyodemo.net/*/r/*
+```
+
+## 設計
+
+コードの可読性・保守性のため、以下のクラス構成で設計されています：
+
+| クラス | 責務 |
+|---|---|
+| `UIBuilder` | 操作パネル（GUI）の構築・状態表示の管理 |
+| `DataExtractor` | ページネーション展開・トグル展開・DOMパース・テキスト整形 |
+| `FileSaver` | Blob生成とファイルダウンロード処理 |
+
+## ライセンス
+
+MIT License
+
+## 作者
+
+[Aerin-the-Lion](https://github.com/Aerin-the-Lion)
