@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         kyodemo.net-downloader
 // @namespace    http://tampermonkey.net/
-// @version      1.0.0.0
+// @version      1.0.1.0
 // @description  kyodemo.netからテキストを抽出し、元BBSのURLを復元して保存するスクリプト
 // @author       Aerin-the-Lion
 // @match        *://*.kyodemo.net/*/r/*
@@ -43,9 +43,10 @@
             title.textContent = '📥 Kyodemo Downloader';
             title.style.cssText = 'font-weight: bold; margin-bottom: 10px; font-size: 14px;';
 
-            this.button = document.createElement('button');
-            this.button.textContent = '全レス展開＆保存';
-            this.button.style.cssText = `
+            // 第1ボタン：全レス保存（URLを /1- にして再読み込み、その後実行）
+            this.btnAll = document.createElement('button');
+            this.btnAll.textContent = '全レス保存（1〜最新）';
+            this.btnAll.style.cssText = `
                 background: #007bff;
                 color: white;
                 border: none;
@@ -55,13 +56,26 @@
                 width: 100%;
                 font-weight: bold;
                 transition: background 0.2s;
+                margin-bottom: 8px;
             `;
 
-            this.statusLabel = document.createElement('div');
-            this.statusLabel.style.cssText = 'margin-top: 10px; font-size: 12px; color: #aaa;';
-            this.statusLabel.textContent = '待機中...';
+            this.btnAll.addEventListener('click', async () => {
+                const url = window.location.href;
+                // URLの末尾が「/数字-」で終わっていない、あるいは中途半端なパスが含まれている場合は「/1-」にリダイレクト
+                if (!url.match(/\/\d+-$/) || url.includes('/n')) {
+                    this.updateStatus('1レス目から読み込むためリダイレクトします...');
+                    // URLからスレッドIDまでのベースURLを抽出し、その後ろに '1-' を付ける
+                    const match = url.match(/(https?:\/\/[^/]+\/sdemo\/r\/[^/]+\/\d+\/).*/);
+                    if (match) {
+                        window.location.href = match[1] + '1-';
+                    } else {
+                        // パターンに合わない場合の簡易フォールバック
+                        const baseUrl = url.replace(/(\/[^/]+)?-?(\?.*)?$/, '');
+                        window.location.href = baseUrl + '/1-';
+                    }
+                    return;
+                }
 
-            this.button.addEventListener('click', async () => {
                 this.setLoadingState(true);
                 try {
                     await this.onStartExtraction(this);
@@ -73,8 +87,40 @@
                 }
             });
 
+            // 第2ボタン：現在の画面の続きから保存
+            this.btnCurrent = document.createElement('button');
+            this.btnCurrent.textContent = '現在のレスから続きを保存';
+            this.btnCurrent.style.cssText = `
+                background: #28a745;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                width: 100%;
+                font-weight: bold;
+                transition: background 0.2s;
+            `;
+
+            this.btnCurrent.addEventListener('click', async () => {
+                this.setLoadingState(true);
+                try {
+                    await this.onStartExtraction(this);
+                } catch (err) {
+                    console.error(err);
+                    this.updateStatus('エラーが発生しました。コンソールをご確認ください。');
+                } finally {
+                    this.setLoadingState(false);
+                }
+            });
+
+            this.statusLabel = document.createElement('div');
+            this.statusLabel.style.cssText = 'margin-top: 10px; font-size: 12px; color: #aaa;';
+            this.statusLabel.textContent = '待機中...';
+
             this.container.appendChild(title);
-            this.container.appendChild(this.button);
+            this.container.appendChild(this.btnAll);
+            this.container.appendChild(this.btnCurrent);
             this.container.appendChild(this.statusLabel);
             document.body.appendChild(this.container);
         }
@@ -84,8 +130,10 @@
         }
 
         setLoadingState(isLoading) {
-            this.button.disabled = isLoading;
-            this.button.style.background = isLoading ? '#555' : '#007bff';
+            this.btnAll.disabled = isLoading;
+            this.btnCurrent.disabled = isLoading;
+            this.btnAll.style.background = isLoading ? '#555' : '#007bff';
+            this.btnCurrent.style.background = isLoading ? '#555' : '#28a745';
         }
     }
 
