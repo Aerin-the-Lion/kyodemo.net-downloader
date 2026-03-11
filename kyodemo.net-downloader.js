@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         kyodemo.net-downloader
 // @namespace    http://tampermonkey.net/
-// @version      1.0.3.0
+// @version      1.0.3.2
 // @description  kyodemo.netからテキストを抽出し、元BBSのURLを復元して保存するスクリプト
 // @author       Aerin-the-Lion
 // @match        *://*.kyodemo.net/*/r/*
@@ -256,24 +256,37 @@
             posts.forEach(post => {
                 try {
                     const rHead = post.querySelector('.r-head strong');
-                    const resNum = rHead ? rHead.textContent.trim() : "";
+                    const resNum = rHead ? (rHead.innerText || rHead.textContent).trim() : "";
 
                     const nameEl = post.querySelector('.clname');
-                    const name = nameEl ? nameEl.textContent.trim() : "";
+                    const name = nameEl ? (nameEl.innerText || nameEl.textContent).trim() : "";
 
                     const dateEl = post.querySelector('.cldate');
-                    let dateStr = dateEl ? dateEl.textContent.trim() : "";
+                    let dateStr = dateEl ? (dateEl.innerText || dateEl.textContent).trim() : "";
                     // 日付のミリ秒の桁数を2桁に整形
                     dateStr = dateStr.replace(/\.(\d{2})\d$/, '.$1');
 
                     const idEl = post.querySelector('.clid');
-                    const id = idEl ? idEl.textContent.trim() : "???";
+                    // 画面の見た目通りにテキストを取得するためinnerTextを使用（フォールバックとしてtextContent）
+                    let id = idEl ? (idEl.innerText || idEl.textContent).trim() : "???";
 
-                    // 投稿回数を取得する。IDリンクの次にある2つ目の a.l-button に "(1/8)" のようなテキストが直接入っている
+                    // 万が一改行が混ざる場合は1行目を採用する
+                    if (id.includes('\n')) {
+                        id = id.split('\n')[0].trim();
+                    }
+
+                    // 投稿回数を取得する。
+                    // 以前は a.l-button のインデックスで決め打ちしていたため、
+                    // レスアンカー等で a.l-button 要素が増えた際に取得位置がズレてIDが重複する問題があった。
+                    // そのため、ID要素の親リンクから辿って次の兄弟要素を取得するよう修正。
                     let postCountStr = "";
-                    const lButtons = post.querySelectorAll('a.l-button');
-                    if (lButtons.length >= 2) {
-                        postCountStr = lButtons[1].textContent.trim(); // 例: "(1/8)"
+                    const idLink = idEl ? idEl.closest('a') : null;
+                    if (idLink && idLink.nextElementSibling && idLink.nextElementSibling.classList.contains('l-button')) {
+                        const nextText = (idLink.nextElementSibling.innerText || idLink.nextElementSibling.textContent).trim();
+                        // 投稿回数 (例: 1/8) かどうかを正規表現でチェック
+                        if (/^\(\d+\/\d+\)$/.test(nextText)) {
+                            postCountStr = nextText;
+                        }
                     }
 
                     const messEl = post.querySelector('.clmess');
